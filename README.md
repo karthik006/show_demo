@@ -1,6 +1,6 @@
 # show_demo
 
-A new Flutter project.
+A flutter demo app to view TV shows.
 
 ## Getting Started
 

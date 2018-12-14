@@ -1,6 +1,8 @@
 import 'package:show_demo/models/show.dart';
 import 'package:flutter/material.dart';
 import 'package:meta/meta.dart';
+import 'package:show_demo/services/api.dart';
+import 'dart:async';
 
 class ShowDetailsHeader extends StatefulWidget {
   final Show show;
@@ -16,6 +18,65 @@ class ShowDetailsHeader extends StatefulWidget {
 }
 
 class _ShowDetailsHeaderState extends State<ShowDetailsHeader> {
+  bool _likeDisabled = true;
+  String _likeText = "";
+  int _likeCount = 0;
+  StreamSubscription _watcher;
+
+  Future<ShowApi> _api;
+
+  @override
+  void initState() {
+    super.initState();
+    _likeCount = widget.show.likeCounter;
+    _api = ShowApi.signInWithGoogle();
+    updateLikeState();
+  }
+
+  void likeShow() async {
+    final api = await _api;
+    if(await api.likedShow(widget.show)) {
+      api.unlikeShow(widget.show);
+      setState(() {
+        _likeCount -= 1;
+        _likeText = "Like";        
+      });
+    } else {
+      api.likeShow(widget.show);
+      setState(() {
+        _likeCount += 1;
+        _likeText = "Unlike"; 
+      });
+    }
+  }
+
+  void updateLikeState() async {
+    final api = await _api;
+    _watcher = api.watch(widget.show, (show) {
+      if(mounted) {
+        setState(() {
+          _likeCount = show.likeCounter;
+        });
+      }
+    });
+
+    bool liked = await api.likedShow(widget.show);
+    if(mounted) {
+        setState(() {
+          _likeDisabled = false;
+          _likeText = liked ? "Unlike":"Like";
+        });
+    }
+  }
+
+  @override
+  void dispose() {
+    if(_watcher != null) {
+      _watcher.cancel();
+    }
+    super.dispose();
+  }
+  
   @override
   Widget build(BuildContext context) {
     var theme = Theme.of(context);
@@ -42,7 +103,7 @@ class _ShowDetailsHeaderState extends State<ShowDetailsHeader> {
           new Padding(
             padding: const EdgeInsets.only(left: 8.0),
             child: new Text(
-              widget.show.likeCounter.toString(),
+              _likeCount.toString(),
               style: textTheme.subhead.copyWith(color: Colors.white),
             )
           )
@@ -61,10 +122,8 @@ class _ShowDetailsHeaderState extends State<ShowDetailsHeader> {
               color: Colors.lightGreen,
               disabledColor: Colors.grey,
               textColor: Colors.white,
-              onPressed: () async {
-
-              },
-              child: new Text('LIKE'),
+              onPressed: _likeDisabled? null : likeShow, 
+              child: new Text(_likeText),
             ),
           )
         ],

@@ -54,7 +54,7 @@ class ShowDetailsBody extends StatelessWidget {
                 backgroundColor: theme.accentColor,
                 child: new Icon(
                   Icons.share,
-                  color: Colors.white,
+                  color: Colors.red,
                   size: 16.0,
                 ),
                 radius: 16.0,

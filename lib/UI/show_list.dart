@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:show_demo/models/show.dart';
 import 'package:show_demo/UI/show_details/details_page.dart';
+import 'package:show_demo/services/api.dart';
 import 'dart:async';
 
 class ShowList extends StatefulWidget {
@@ -11,15 +12,33 @@ class ShowList extends StatefulWidget {
 class _ShowListState extends State<ShowList> {
   
   List<Show> _shows = [];
+  ShowApi _api;
+  //NetworkImage _profileImage;
 
   @override
   void initState() {
     super.initState();
-    _loadShows();
+    _reloadShows();
+    _loadFromFirebase();
   }
 
-  _loadShows() async {
+  _loadFromFirebase() async {
+    final api = await ShowApi.signInWithGoogle();
+    final show = await api.getShows();
+    setState(() {
+      _api = api;
+      _shows = show;
+      //_profileImage = new NetworkImage(api.firebaseUser.photoUrl);      
+    });
+  }
 
+  _reloadShows() async {
+    if(_api != null) {
+      final show = await _api.getShows();
+      setState(() {
+        _shows = show;        
+      });
+    }
   }
 
   _navigateToShowDetails(Show show, Object showTag) {
@@ -43,7 +62,7 @@ class _ShowListState extends State<ShowList> {
     Show shows = _shows[index];
 
     return new Container(
-      margin: const EdgeInsets.only(top: 5.0),
+      margin: const EdgeInsets.only(top: 5.0, bottom: 5.0),
       child: new Card(
         child: new Column(
           mainAxisSize: MainAxisSize.min,
@@ -60,7 +79,11 @@ class _ShowListState extends State<ShowList> {
                 shows.name,
                 style: new TextStyle(fontWeight: FontWeight.bold, color: Colors.black54),
               ),
-              subtitle: new Text(shows.description),
+              subtitle: new Text(
+                shows.description,
+                maxLines: 2,
+                overflow: TextOverflow.clip,
+              ),
               isThreeLine: true,
               dense: false,
             )
@@ -71,7 +94,7 @@ class _ShowListState extends State<ShowList> {
   }
 
   Future<Null> refresh() {
-    _loadShows();
+    _reloadShows();
     return new Future<Null>.value();
   }
 

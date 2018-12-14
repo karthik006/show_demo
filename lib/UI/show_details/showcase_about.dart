@@ -13,7 +13,7 @@ class AboutShowCase extends StatelessWidget {
 
     return new Padding(
       padding: const EdgeInsets.only(top: 8.0),
-      child: new Row(
+      child: new Column(
         children: [
           new Text(
             "Number of episodes: " + show.episodes.toString(),
